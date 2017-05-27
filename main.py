@@ -40,6 +40,8 @@ parser.add_argument('--no-shared', default=False, metavar='O',
 
 
 if __name__ == '__main__':
+    os.environ['OMP_NUM_THREADS'] = '1'  
+  
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
