@@ -10,36 +10,32 @@ from model import ActorCritic
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 
-
-def ensure_shared_grads(model, shared_model):
-    for param, shared_param in zip(model.parameters(), shared_model.parameters()):
-        if shared_param.grad is not None:
-            return
-        shared_param._grad = param.grad
-
-
-def train(rank, args, shared_model, optimizer=None):
-    torch.manual_seed(args.seed + rank)
+def train(args, model, optimizer=None):
+    torch.manual_seed(args.seed)
 
     env = create_atari_env(args.env_name)
-    env.seed(args.seed + rank)
+    print ("env: ", env.observation_space.shape, env.action_space)
+    env.seed(args.seed)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
 
     if optimizer is None:
-        optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
+        optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     model.train()
 
     state = env.reset()
+    print ("state: ", state.shape)
     state = torch.from_numpy(state)
     done = True
 
     episode_length = 0
-    while True:
+    u = 0
+    while u < args.num_updates:
+        # print ("update: ", u)
         episode_length += 1
         # Sync with the shared model
-        model.load_state_dict(shared_model.state_dict())
+        # model.load_state_dict(shared_model.state_dict())
         if done:
             cx = Variable(torch.zeros(1, 256))
             hx = Variable(torch.zeros(1, 256))
@@ -107,5 +103,5 @@ def train(rank, args, shared_model, optimizer=None):
         (policy_loss + 0.5 * value_loss).backward()
         torch.nn.utils.clip_grad_norm(model.parameters(), 40)
 
-        ensure_shared_grads(model, shared_model)
         optimizer.step()
+        u += 1

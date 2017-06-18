@@ -13,7 +13,6 @@ from envs import create_atari_env
 from model import ActorCritic
 from train import train
 from test import test
-import my_optim
 
 # Based on
 # https://github.com/pytorch/examples/tree/master/mnist_hogwild
@@ -27,45 +26,24 @@ parser.add_argument('--tau', type=float, default=1.00, metavar='T',
                     help='parameter for GAE (default: 1.00)')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--num-processes', type=int, default=4, metavar='N',
-                    help='how many training processes to use (default: 4)')
 parser.add_argument('--num-steps', type=int, default=20, metavar='NS',
                     help='number of forward steps in A3C (default: 20)')
+parser.add_argument('--num-updates', type=int, default=100, metavar='NU',
+                    help='number of updates between tests (default: 100)')
 parser.add_argument('--max-episode-length', type=int, default=10000, metavar='M',
                     help='maximum length of an episode (default: 10000)')
-parser.add_argument('--env-name', default='PongDeterministic-v3', metavar='ENV',
+parser.add_argument('--env-name', default='PongDeterministic-v4', metavar='ENV',
                     help='environment to train on (default: PongDeterministic-v3)')
-parser.add_argument('--no-shared', default=False, metavar='O',
-                    help='use an optimizer without shared momentum.')
 
 
 if __name__ == '__main__':
-    os.environ['OMP_NUM_THREADS'] = '1'  
-  
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
 
     env = create_atari_env(args.env_name)
-    shared_model = ActorCritic(
-        env.observation_space.shape[0], env.action_space)
-    shared_model.share_memory()
+    model = ActorCritic(env.observation_space.shape[0], env.action_space)
 
-    if args.no_shared:
-        optimizer = None
-    else:
-        optimizer = my_optim.SharedAdam(shared_model.parameters(), lr=args.lr)
-        optimizer.share_memory()
-
-    processes = []
-
-    p = mp.Process(target=test, args=(args.num_processes, args, shared_model))
-    p.start()
-    processes.append(p)
-
-    for rank in range(0, args.num_processes):
-        p = mp.Process(target=train, args=(rank, args, shared_model, optimizer))
-        p.start()
-        processes.append(p)
-    for p in processes:
-        p.join()
+    while True:
+        train(args, model)
+        test(args, model)

@@ -13,11 +13,11 @@ import time
 from collections import deque
 
 
-def test(rank, args, shared_model):
-    torch.manual_seed(args.seed + rank)
+def test(args, model):
+    torch.manual_seed(args.seed)
 
     env = create_atari_env(args.env_name)
-    env.seed(args.seed + rank)
+    env.seed(args.seed)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
 
@@ -37,7 +37,7 @@ def test(rank, args, shared_model):
         episode_length += 1
         # Sync with the shared model
         if done:
-            model.load_state_dict(shared_model.state_dict())
+            # model.load_state_dict(shared_model.state_dict())
             cx = Variable(torch.zeros(1, 256), volatile=True)
             hx = Variable(torch.zeros(1, 256), volatile=True)
         else:
@@ -67,6 +67,7 @@ def test(rank, args, shared_model):
             episode_length = 0
             actions.clear()
             state = env.reset()
-            time.sleep(60)
+            return
+            # time.sleep(60)
 
         state = torch.from_numpy(state)
