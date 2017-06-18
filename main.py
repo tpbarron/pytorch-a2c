@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.nn.functional as F
-from envs import create_atari_env
+from envs import create_atari_env, create_car_racing_env
 from model import ActorCritic
 from train import train
 from test import test
@@ -41,9 +41,10 @@ if __name__ == '__main__':
 
     torch.manual_seed(args.seed)
 
-    env = create_atari_env(args.env_name)
+    # env = create_atari_env(args.env_name)
+    env = create_car_racing_env()
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
 
     while True:
-        train(args, model)
-        test(args, model)
+        train(args, model, env)
+        test(args, model, env)

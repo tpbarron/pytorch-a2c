@@ -5,7 +5,7 @@ import sys
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from envs import create_atari_env
+from envs import create_atari_env, create_car_racing_env
 from model import ActorCritic
 from torch.autograd import Variable
 from torchvision import datasets, transforms
@@ -13,10 +13,11 @@ import time
 from collections import deque
 
 
-def test(args, model):
+def test(args, model, env):
     torch.manual_seed(args.seed)
 
-    env = create_atari_env(args.env_name)
+    # env = create_atari_env(args.env_name)
+    # env = create_car_racing_env()
     env.seed(args.seed)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
@@ -34,12 +35,13 @@ def test(args, model):
     actions = deque(maxlen=100)
     episode_length = 0
     while True:
+        env.render()
         episode_length += 1
         # Sync with the shared model
         if done:
             # model.load_state_dict(shared_model.state_dict())
-            cx = Variable(torch.zeros(1, 256), volatile=True)
-            hx = Variable(torch.zeros(1, 256), volatile=True)
+            cx = Variable(torch.zeros(1, model.lstm_size), volatile=True)
+            hx = Variable(torch.zeros(1, model.lstm_size), volatile=True)
         else:
             cx = Variable(cx.data, volatile=True)
             hx = Variable(hx.data, volatile=True)

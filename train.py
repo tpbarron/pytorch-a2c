@@ -5,15 +5,16 @@ import sys
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from envs import create_atari_env
+from envs import create_atari_env, create_car_racing_env
 from model import ActorCritic
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 
-def train(args, model, optimizer=None):
+def train(args, model, env, optimizer=None):
     torch.manual_seed(args.seed)
 
-    env = create_atari_env(args.env_name)
+    # env = create_atari_env(args.env_name)
+    # env = create_car_racing_env()
     print ("env: ", env.observation_space.shape, env.action_space)
     env.seed(args.seed)
 
@@ -32,13 +33,13 @@ def train(args, model, optimizer=None):
     episode_length = 0
     u = 0
     while u < args.num_updates:
-        # print ("update: ", u)
+        print ("update: ", u)
         episode_length += 1
         # Sync with the shared model
         # model.load_state_dict(shared_model.state_dict())
         if done:
-            cx = Variable(torch.zeros(1, 256))
-            hx = Variable(torch.zeros(1, 256))
+            cx = Variable(torch.zeros(1, model.lstm_size))
+            hx = Variable(torch.zeros(1, model.lstm_size))
         else:
             cx = Variable(cx.data)
             hx = Variable(hx.data)
