@@ -35,7 +35,7 @@ def test(args, model, env):
     actions = deque(maxlen=100)
     episode_length = 0
     while True:
-        env.render()
+        #env.render()
         episode_length += 1
         # Sync with the shared model
         if done:

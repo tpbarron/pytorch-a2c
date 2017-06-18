@@ -33,7 +33,7 @@ def train(args, model, env, optimizer=None):
     episode_length = 0
     u = 0
     while u < args.num_updates:
-        print ("update: ", u)
+        #print ("update: ", u)
         episode_length += 1
         # Sync with the shared model
         # model.load_state_dict(shared_model.state_dict())

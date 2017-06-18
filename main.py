@@ -45,6 +45,10 @@ if __name__ == '__main__':
     env = create_car_racing_env()
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
 
+    itr = 0
     while True:
+        if itr % 10 == 0:
+            print ("Itr: ", itr)
         train(args, model, env)
         test(args, model, env)
+        itr += 1
